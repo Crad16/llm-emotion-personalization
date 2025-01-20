@@ -8,7 +8,7 @@ from src.model_utils import load_hf_model, generate_response
 def main():
     df = load_csv("data/StudEmo_text_data.csv")
     # df = df.head(10) # for limited input line
-    model_name = "mistralai/Mistral-7B-Instruct-v0.3"  
+    model_name = "Qwen/Qwen2.5-7B-Instruct"
     tokenizer, model = load_hf_model(model_name)
 
     responses = []
@@ -18,9 +18,9 @@ def main():
         response = generate_response(prompt, tokenizer, model)
         responses.append(response)
 
-    df["mistral_response"] = responses
-    df.to_csv("data/mistral_output.csv", index=False)
-    print("Mistral generation completed. Results saved to data/mistral_output.csv")
+    df["qwen_response"] = responses
+    df.to_csv("data/qwen_output.csv", index=False)
+    print("Qwen generation completed. Results saved to data/qwen_output.csv")
 
 if __name__ == "__main__":
     main()

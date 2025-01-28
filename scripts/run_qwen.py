@@ -2,25 +2,25 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.data_utils import load_csv
-from src.model_utils import load_hf_model, generate_response
+from src.model_utils import load_hf_model, hf_generate_response
+
+QWEN_TOKENIZER = None
+QWEN_MODEL = None
+
+def init_qwen():
+    global QWEN_TOKENIZER, QWEN_MODEL
+    if QWEN_MODEL is None or QWEN_TOKENIZER is None:
+        model_name = "Qwen/Qwen2.5-7B-Instruct"
+        QWEN_TOKENIZER, QWEN_MODEL = load_hf_model(model_name)
+
+def run_qwen_inference(prompt: str) -> str:
+    init_qwen()
+    return hf_generate_response(prompt, QWEN_TOKENIZER, QWEN_MODEL)
 
 def main():
-    df = load_csv("data/StudEmo_text_data.csv")
-    # df = df.head(10) # for limited input line
-    model_name = "Qwen/Qwen2.5-7B-Instruct"
-    tokenizer, model = load_hf_model(model_name)
-
-    responses = []
-    for _, row in df.iterrows():
-        text_data = row["text"]
-        prompt = f"Default prompt: {text_data}"
-        response = generate_response(prompt, tokenizer, model)
-        responses.append(response)
-
-    df["qwen_response"] = responses
-    df.to_csv("data/qwen_output.csv", index=False)
-    print("Qwen generation completed. Results saved to data/qwen_output.csv")
+    test_output = run_qwen_inference("Hello from Qwen2.5!")
+    print(test_output)
 
 if __name__ == "__main__":
     main()
+    

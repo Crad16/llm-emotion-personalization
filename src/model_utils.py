@@ -3,8 +3,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 def load_hf_model(model_name: str):
     """
-    Loads a Hugging Face model and tokenizer from model_name.
-    Returns the tokenizer and model.
+    Loads a Hugging Face model and tokenizer from `model_name`.
+    Returns (tokenizer, model).
     """
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
@@ -14,9 +14,9 @@ def load_hf_model(model_name: str):
     )
     return tokenizer, model
 
-def generate_response(prompt: str, tokenizer, model, max_new_tokens=128):
+def hf_generate_response(prompt: str, tokenizer, model, max_new_tokens=512):
     """
-    Generates a text response from the model given a prompt.
+    Generates a text response given a prompt, using a HF-based model.
     """
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     output_ids = model.generate(

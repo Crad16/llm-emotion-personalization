@@ -1,8 +1,10 @@
+# scripts/run_mistral.py
+
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.model_utils import load_hf_model, generate_response
+from src.model_utils import load_hf_model, hf_generate_response
 
 MISTRAL_TOKENIZER = None
 MISTRAL_MODEL = None
@@ -14,16 +16,12 @@ def init_mistral():
         MISTRAL_TOKENIZER, MISTRAL_MODEL = load_hf_model(model_name)
 
 def run_mistral_inference(prompt: str) -> str:
-    """
-    Generates text using the Mistral model.
-    """
     init_mistral()
-    return generate_response(prompt, MISTRAL_TOKENIZER, MISTRAL_MODEL)
+    return hf_generate_response(prompt, MISTRAL_TOKENIZER, MISTRAL_MODEL)
 
 def main():
-    test_prompt = "Hello from Mistral!"
-    output = run_mistral_inference(test_prompt)
-    print("Mistral response:", output)
+    test_output = run_mistral_inference("Hello from Mistral!")
+    print(test_output)
 
 if __name__ == "__main__":
     main()

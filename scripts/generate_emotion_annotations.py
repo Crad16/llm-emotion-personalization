@@ -4,6 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import argparse
 import pandas as pd
+import json
 
 # Import the prompt template
 from src.prompts.emotion_prompt import EMOTION_PROMPT_TEMPLATE
@@ -55,8 +56,9 @@ def main():
 
         prompt = EMOTION_PROMPT_TEMPLATE.format(post_text=text)
 
-        response = inference_func(prompt)
-        outputs.append(response)
+        raw_response = inference_func(prompt)
+        json_str = extract_json_from_response(raw_response)
+        outputs.append(json_str)
 
         if idx % 20 == 0:
             print(f"Processed row {idx}...")
@@ -65,6 +67,23 @@ def main():
     df[f"{args.model}_annotations"] = outputs
     df.to_csv(args.output_csv, index=False)
     print(f"Done! Results saved to {args.output_csv}")
+    
+
+def extract_json_from_response(response: str) -> str:
+    """
+    Locates the first '{' and the last '}' in `response`
+    and returns that substring as the extracted JSON string.
+    If parsing fails, returns the raw response.
+    """
+    try:
+        start_index = response.index('{')
+        end_index = response.rindex('}') + 1
+        json_str = response[start_index:end_index]
+        return json_str
+    except ValueError:
+        # If '{' or '}' isn't found
+        return response
+
 
 if __name__ == "__main__":
     main()

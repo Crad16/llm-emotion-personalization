@@ -35,8 +35,4 @@ Return in JSON format, structured as follows:
 "valence": -3 | -2 | -1 | 0 | 1 | 2 | 3, "valence_reason": [Your reasoning for valence score here],
 "arousal": 0 | 1 | 2 | 3, "arousal_reason": [Your reasoning for arousal score here]
 )
-
-**Important**:
-Do not restate the prompt or the original text. 
-Only return the JSON object exactly in the [Format].
 """

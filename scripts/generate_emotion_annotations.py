@@ -26,8 +26,10 @@ def main():
                         help="Path to input CSV with 'text' column")
     parser.add_argument("--output_csv", default="data/emotion_annotated_results.csv",
                         help="Where to save results")
-    parser.add_argument("--limit", type=int, default=100,
-                        help="Limit number of rows to process")
+    parser.add_argument("--start_line", type=int, default=0,
+                        help="Index of the first row to process (0-based, inclusive)")
+    parser.add_argument("--end_line", type=int, default=None,
+                        help="Index of the last row to process (exclusive). If not set, process until the end.")
     args = parser.parse_args()
 
     # Assign the correct inference function
@@ -47,7 +49,7 @@ def main():
     # Load data
     df = pd.read_csv(args.input_csv)
 
-    df = df.tail(args.limit)
+    df = df.iloc[args.start_line:args.end_line]
 
     # Generate the annotations
     outputs = []
@@ -60,7 +62,7 @@ def main():
         json_str = extract_json_from_response(raw_response)
         outputs.append(json_str)
 
-        if idx % 20 == 0:
+        if idx % 50 == 0:
             print(f"Processed row {idx}...")
 
     # Save results

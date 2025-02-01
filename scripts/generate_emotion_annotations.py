@@ -4,7 +4,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import argparse
 import pandas as pd
-import json
 
 # Import the prompt template
 from src.prompts.emotion_prompt import EMOTION_PROMPT_TEMPLATE
@@ -26,8 +25,12 @@ def main():
                         help="Path to input CSV with 'text' column")
     parser.add_argument("--output_csv", default="data/emotion_annotated_results.csv",
                         help="Where to save results")
-    parser.add_argument("--limit", type=int, default=100,
-                        help="Limit number of rows to process")
+    parser.add_argument("--start_line", type=int, default=0,
+                        help="Index of the first row to process (0-based, inclusive)")
+    parser.add_argument("--end_line", type=int, default=None,
+                        help="Index of the last row to process (exclusive). If not set, process until the end.")
+    parser.add_argument("--chunk_size", type=int, default=100,
+                        help="Write partial results every N lines")
     args = parser.parse_args()
 
     # Assign the correct inference function
@@ -47,26 +50,37 @@ def main():
     # Load data
     df = pd.read_csv(args.input_csv)
 
-    df = df.tail(args.limit)
+    df = df.iloc[args.start_line:args.end_line]
+    
+    partial_data = []
 
-    # Generate the annotations
-    outputs = []
-    for idx, row in df.iterrows():
+    for i, (idx, row) in enumerate(df.iterrows()):
         text = row["text"]
-
         prompt = EMOTION_PROMPT_TEMPLATE.format(post_text=text)
 
         raw_response = inference_func(prompt)
+
         json_str = extract_json_from_response(raw_response)
-        outputs.append(json_str)
 
-        if idx % 20 == 0:
-            print(f"Processed row {idx}...")
+        result_dict = {
+            "original_index": idx,
+            f"{args.model}_annotations": json_str
+        }
 
-    # Save results
-    df[f"{args.model}_annotations"] = outputs
-    df.to_csv(args.output_csv, index=False)
-    print(f"Done! Results saved to {args.output_csv}")
+        partial_data.append(result_dict)
+
+        # Write out every "chunk_size" lines
+        if (i + 1) % args.chunk_size == 0:
+            write_partial_to_csv(partial_data, args.output_csv)
+            partial_data = []  # reset buffer
+            print(f"Processed and saved up to local index {i} (original row {idx}).")
+
+    # After the loop, if there's leftover data < chunk_size, write it
+    if partial_data:
+        write_partial_to_csv(partial_data, args.output_csv)
+        print("Saved the final partial chunk.")
+
+    print("Done! Check the output file:", args.output_csv)
     
 
 def extract_json_from_response(response: str) -> str:
@@ -83,6 +97,22 @@ def extract_json_from_response(response: str) -> str:
     except ValueError:
         # If '{' or '}' isn't found
         return response
+    
+def write_partial_to_csv(data_list, output_csv):
+    """
+    Appends data_list to CSV file in 'append' mode.
+    If the file doesn't exist yet, include header.
+    Otherwise, skip header.
+    """
+    partial_df = pd.DataFrame(data_list)
+
+    file_exists = os.path.exists(output_csv)
+    partial_df.to_csv(
+        output_csv,
+        mode='a',
+        index=False,
+        header=not file_exists
+    )
 
 
 if __name__ == "__main__":

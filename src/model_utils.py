@@ -12,6 +12,7 @@ def load_hf_model(model_name: str):
         torch_dtype=torch.float16,
         device_map="auto"
     )
+    model.config.pad_token_id = tokenizer.eos_token_id
     return tokenizer, model
 
 def hf_generate_response(prompt: str, tokenizer, model, max_new_tokens=512):

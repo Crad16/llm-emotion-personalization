@@ -1,10 +1,10 @@
 import os
 
-def split_csv_by_annotator(csv_path="StudEmo_annotation_data.csv"):
+def split_csv_by_annotator(csv_path="data/StudEmo_annotation_data.csv"):
     # Create 25 output file handles, one for each annotator_id (0..24)
     out_files = []
     for annot_id in range(25):
-        f = open(f"annotation_data_annotator_{annot_id}.csv", "w", encoding="utf-8")
+        f = open(f"data/annotation_data_annotator_{annot_id}.csv", "w", encoding="utf-8")
         out_files.append(f)
     
     with open(csv_path, "r", encoding="utf-8") as f_in:
@@ -35,4 +35,4 @@ def split_csv_by_annotator(csv_path="StudEmo_annotation_data.csv"):
         f.close()
 
 if __name__ == "__main__":
-    split_csv_by_annotator("StudEmo_annotation_data.csv")
+    split_csv_by_annotator("data/StudEmo_annotation_data.csv")

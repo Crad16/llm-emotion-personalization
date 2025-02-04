@@ -10,7 +10,7 @@ from langchain.vectorstores import Chroma
 from langchain.docstore.document import Document
 from langchain.embeddings import HuggingFaceEmbeddings
 
-from src.prompts.rag_emotion_prompt import RAG_EMOTION_PROMPT_TEMPLATE
+from src.prompts.rag_emotion_prompt import RAG_EMOTION_PROMPT_TEMPLATE_SYSTEM, RAG_EMOTION_PROMPT_TEMPLATE_USER
 
 from scripts.run_mistral import run_mistral_inference
 from scripts.run_gpt4o import run_gpt4o_inference
@@ -105,9 +105,10 @@ def main():
                                        for d in retrieved_docs])
 
             # Build final prompt
-            prompt = RAG_EMOTION_PROMPT_TEMPLATE.format(rag_context=rag_context, post_text=new_text)
+            system_prompt = RAG_EMOTION_PROMPT_TEMPLATE_SYSTEM
+            user_prompt = RAG_EMOTION_PROMPT_TEMPLATE_USER.format(rag_context=rag_context, post_text=new_text)
 
-            raw_response = inference_func(prompt)
+            raw_response = inference_func(system_prompt=system_prompt, user_prompt=user_prompt)
             outputs.append(raw_response)
 
             if (idx + 1) % 50 == 0:

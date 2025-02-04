@@ -2,10 +2,6 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 def load_hf_model(model_name: str):
-    """
-    Loads a Hugging Face model and tokenizer from `model_name`.
-    Returns (tokenizer, model).
-    """
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
@@ -14,11 +10,11 @@ def load_hf_model(model_name: str):
     )
     return tokenizer, model
 
-def hf_generate_response(prompt: str, tokenizer, model, max_new_tokens=512):
-    """
-    Generates a text response given a prompt, using a HF-based model.
-    """
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+def hf_generate_response(system_prompt: str, user_prompt: str,
+                        tokenizer, model, max_new_tokens=1000):
+    combined_prompt = f"""[System]\n{system_prompt}\n\n[User]\n{user_prompt}\n\n[Assistant]"""
+
+    inputs = tokenizer(combined_prompt, return_tensors="pt").to(model.device)
     output_ids = model.generate(
         **inputs,
         max_new_tokens=max_new_tokens,
@@ -26,4 +22,5 @@ def hf_generate_response(prompt: str, tokenizer, model, max_new_tokens=512):
         top_k=50,
         top_p=0.9
     )
+
     return tokenizer.decode(output_ids[0], skip_special_tokens=True)

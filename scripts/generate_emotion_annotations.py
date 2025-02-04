@@ -5,7 +5,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import argparse
 import pandas as pd
 
-from src.prompts.emotion_prompt import EMOTION_PROMPT_TEMPLATE
+from src.prompts.emotion_prompt import EMOTION_PROMPT_TEMPLATE_SYSTEM, EMOTION_PROMPT_TEMPLATE_USER
 
 from scripts.run_mistral import run_mistral_inference
 from scripts.run_gpt4o import run_gpt4o_inference
@@ -67,9 +67,10 @@ def main():
         outputs = []
         for idx, row in merged_df.iterrows():
             text_content = str(row["text"])
-            prompt = EMOTION_PROMPT_TEMPLATE.format(post_text=text_content)
+            system_prompt = EMOTION_PROMPT_TEMPLATE_SYSTEM
+            user_prompt = EMOTION_PROMPT_TEMPLATE_USER.format(post_text=text_content)
 
-            raw_response = inference_func(prompt)
+            raw_response = inference_func(system_prompt=system_prompt, user_prompt=user_prompt)
             outputs.append(raw_response)
 
             if (idx + 1) % 50 == 0:

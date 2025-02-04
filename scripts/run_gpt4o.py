@@ -11,7 +11,7 @@ def run_gpt4o_inference(prompt: str) -> str:
         model="gpt-4o-2024-05-13",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
-        max_tokens=512
+        max_tokens=1000
     )
     return response["choices"][0]["message"]["content"]
 

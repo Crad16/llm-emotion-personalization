@@ -4,12 +4,9 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import argparse
 import pandas as pd
-import json
 
-# Import the prompt template
 from src.prompts.emotion_prompt import EMOTION_PROMPT_TEMPLATE
 
-# Import each model's inference function
 from scripts.run_mistral import run_mistral_inference
 from scripts.run_gpt4o import run_gpt4o_inference
 from scripts.run_qwen import run_qwen_inference
@@ -17,22 +14,20 @@ from scripts.run_llama import run_llama_inference
 from scripts.run_mentallama import run_mentallama_inference
 
 def main():
-    # Parse command-line args
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True, type=str,
                         choices=["mistral","gpt4o","qwen2.5","llama","mental_llama"],
                         help="Which model to use for emotion annotation")
-    parser.add_argument("--input_csv", default="data/StudEmo_text_data.csv",
-                        help="Path to input CSV with 'text' column")
-    parser.add_argument("--output_csv", default="data/emotion_annotated_results.csv",
-                        help="Where to save results")
-    parser.add_argument("--start_line", type=int, default=0,
-                        help="Index of the first row to process (0-based, inclusive)")
-    parser.add_argument("--end_line", type=int, default=None,
-                        help="Index of the last row to process (exclusive). If not set, process until the end.")
+    parser.add_argument("--annotator_ids", type=str, required=True,
+                        help="Comma-separated list of annotator IDs to process, e.g. '0,1,2'")
+    parser.add_argument("--test_folder", default="data/split_test",
+                        help="Folder that contains 'annotator_{id}_test.csv' files")
+    parser.add_argument("--output_folder", default="data/no_personalization",
+                        help="Folder to store the output CSV files")
+    parser.add_argument("--text_csv", default="data/original/StudEmo_text_data.csv",
+                        help="CSV file mapping text_id to actual text columns")
     args = parser.parse_args()
 
-    # Assign the correct inference function
     if args.model == "mistral":
         inference_func = run_mistral_inference
     elif args.model == "gpt4o":
@@ -46,46 +41,45 @@ def main():
     else:
         raise ValueError(f"Unknown model: {args.model}")
 
-    # Load data
-    df = pd.read_csv(args.input_csv)
+    annotator_ids = [int(a.strip()) for a in args.annotator_ids.split(",")]
 
-    df = df.iloc[args.start_line:args.end_line]
+    text_df = pd.read_csv(args.text_csv)
+    if "text_id" not in text_df.columns or "text" not in text_df.columns:
+        raise ValueError("text_csv must have at least 'text_id' and 'text' columns.")
 
-    # Generate the annotations
-    outputs = []
-    for idx, row in df.iterrows():
-        text = row["text"]
+    os.makedirs(args.output_folder, exist_ok=True)
 
-        prompt = EMOTION_PROMPT_TEMPLATE.format(post_text=text)
+    for annot_id in annotator_ids:
+        input_csv = os.path.join(args.test_folder, f"annotator_{annot_id}_test.csv")
+        if not os.path.exists(input_csv):
+            print(f"File not found: {input_csv}")
+            continue
 
-        raw_response = inference_func(prompt)
-        json_str = extract_json_from_response(raw_response)
-        outputs.append(json_str)
+        df = pd.read_csv(input_csv)
+        print(f"Loaded {len(df)} lines from {input_csv}")
 
-        if idx % 50 == 0:
-            print(f"Processed row {idx}...")
+        if "text_id" not in df.columns:
+            print(f"No 'text_id' column in {input_csv}, cannot merge with text. Skipping.")
+            continue
 
-    # Save results
-    df[f"{args.model}_annotations"] = outputs
-    df.to_csv(args.output_csv, index=False)
-    print(f"Done! Results saved to {args.output_csv}")
-    
+        merged_df = pd.merge(df, text_df[["text_id", "text"]], on="text_id", how="left")
 
-def extract_json_from_response(response: str) -> str:
-    """
-    Locates the first '{' and the last '}' in `response`
-    and returns that substring as the extracted JSON string.
-    If parsing fails, returns the raw response.
-    """
-    try:
-        start_index = response.index('{')
-        end_index = response.rindex('}') + 1
-        json_str = response[start_index:end_index]
-        return json_str
-    except ValueError:
-        # If '{' or '}' isn't found
-        return response
+        outputs = []
+        for idx, row in merged_df.iterrows():
+            text_content = str(row["text"])
+            prompt = EMOTION_PROMPT_TEMPLATE.format(post_text=text_content)
 
+            raw_response = inference_func(prompt)
+            outputs.append(raw_response)
+
+            if (idx + 1) % 50 == 0:
+                print(f"Annotator {annot_id}, processed {idx+1} lines...")
+
+        merged_df[f"{args.model}_annotations"] = outputs
+
+        output_csv = os.path.join(args.output_folder, f"result_{annot_id}.csv")
+        merged_df.to_csv(output_csv, index=False)
+        print(f"Done! Saved {len(merged_df)} results to {output_csv}")
 
 if __name__ == "__main__":
     main()

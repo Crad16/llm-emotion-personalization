@@ -10,7 +10,10 @@ from langchain.vectorstores import Chroma
 from langchain.docstore.document import Document
 from langchain.embeddings import HuggingFaceEmbeddings
 
-from src.prompts.rag_emotion_prompt import RAG_EMOTION_PROMPT_TEMPLATE_SYSTEM, RAG_EMOTION_PROMPT_TEMPLATE_USER
+from src.prompts.rag_emotion_prompt import (
+    RAG_EMOTION_PROMPT_TEMPLATE_SYSTEM,
+    RAG_EMOTION_PROMPT_TEMPLATE_USER
+)
 
 from scripts.run_mistral import run_mistral_inference
 from scripts.run_gpt4o import run_gpt4o_inference
@@ -25,14 +28,14 @@ def main():
                         help="Which model to use for emotion annotation")
     parser.add_argument("--annotator_ids", type=str, required=True,
                         help="Comma-separated list of annotator IDs (e.g. '0,1,2')")
-    parser.add_argument("--prev_folder", default="data/split_prev",
-                        help="Folder that contains 'annotator_{id}_prev.csv' files")
-    parser.add_argument("--test_folder", default="data/split_test",
-                        help="Folder that contains 'annotator_{id}_test.csv' files")
-    parser.add_argument("--output_folder", default="data/personalization",
-                        help="Folder to store final RAG-based results")
+    parser.add_argument("--split_folder", default="data/annotator_split",
+                        help="Folder that contains 'annotation_data_annotator_{id}.csv' files")
     parser.add_argument("--text_csv", default="data/original/StudEmo_text_data.csv",
                         help="CSV file that has 'text_id' and 'text' columns")
+    parser.add_argument("--output_folder", default="data/personalization",
+                        help="Folder to store final RAG-based results")
+    parser.add_argument("--rag_size", type=int, default=50,
+                        help="Number of lines to use as RAG reference (excluding header)")
     parser.add_argument("--k_retrieval", type=int, default=3,
                         help="Number of docs to retrieve for each new text")
     args = parser.parse_args()
@@ -59,66 +62,66 @@ def main():
     os.makedirs(args.output_folder, exist_ok=True)
 
     for annot_id in annotator_ids:
-        prev_csv = os.path.join(args.prev_folder, f"annotator_{annot_id}_prev.csv")
-        test_csv = os.path.join(args.test_folder, f"annotator_{annot_id}_test.csv")
-        
-        if not os.path.exists(prev_csv):
-            print(f"File not found: {prev_csv}")
-            continue
-        if not os.path.exists(test_csv):
-            print(f"File not found: {test_csv}")
-            continue
-        
-        prev_df = pd.read_csv(prev_csv)
-        if "text_id" not in prev_df.columns:
-            print(f"No 'text_id' column in {prev_csv}, skipping.")
+        in_csv = os.path.join(args.split_folder, f"annotation_data_annotator_{annot_id}.csv")
+        if not os.path.exists(in_csv):
+            print(f"File not found: {in_csv}")
             continue
 
-        merged_prev = pd.merge(prev_df, text_df[["text_id","text"]], on="text_id", how="left")
+        df = pd.read_csv(in_csv)
+        if "text_id" not in df.columns:
+            print(f"No 'text_id' column in {in_csv}, skipping.")
+            continue
+
+        # Convert the first rag_size lines (excluding header) as RAG reference
+        rag_df = df.head(args.rag_size).copy()
+        test_df = df.iloc[args.rag_size:].copy()
+        print(f"Annotator {annot_id}: Using {len(rag_df)} lines for RAG, {len(test_df)} lines for test.")
+
+        # Merge RAG reference with text CSV
+        rag_merged = pd.merge(rag_df, text_df[["text_id","text"]], on="text_id", how="left")
 
         docs = []
-        for i, row in merged_prev.iterrows():
+        for i, row in rag_merged.iterrows():
             annotation_info = row.drop(["text_id","text"]).to_dict()
             info_str = ", ".join([f"{k}={v}" for k,v in annotation_info.items()])
             doc_content = f"({info_str})\nFullText: {row['text']}"
-            
             doc = Document(page_content=str(doc_content), metadata={"row_index": i})
             docs.append(doc)
 
         embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         vectorstore = Chroma.from_documents(docs, embeddings)
 
-        test_df = pd.read_csv(test_csv)
-        if "text_id" not in test_df.columns:
-            print(f"No 'text_id' column in {test_csv}, skipping.")
-            continue
-
-        merged_test = pd.merge(test_df, text_df[["text_id","text"]], on="text_id", how="left")
-
+        # Merge test lines with text CSV
+        test_merged = pd.merge(test_df, text_df[["text_id","text"]], on="text_id", how="left")
         outputs = []
-        for idx, row in merged_test.iterrows():
+
+        for idx, row in test_merged.iterrows():
             new_text = str(row["text"])
-            
+
             # Retrieve docs
             retrieved_docs = vectorstore.similarity_search(new_text, k=args.k_retrieval)
-            rag_context = "\n\n".join([f"PrevDoc({d.metadata['row_index']}): {d.page_content}"
-                                       for d in retrieved_docs])
+            rag_context = "\n\n".join(
+                f"PrevDoc({d.metadata['row_index']}): {d.page_content}" for d in retrieved_docs
+            )
 
             # Build final prompt
             system_prompt = RAG_EMOTION_PROMPT_TEMPLATE_SYSTEM
-            user_prompt = RAG_EMOTION_PROMPT_TEMPLATE_USER.format(rag_context=rag_context, post_text=new_text)
+            user_prompt = RAG_EMOTION_PROMPT_TEMPLATE_USER.format(
+                rag_context=rag_context,
+                post_text=new_text
+            )
 
             raw_response = inference_func(system_prompt=system_prompt, user_prompt=user_prompt)
             outputs.append(raw_response)
 
             if (idx + 1) % 50 == 0:
-                print(f"Annotator {annot_id}, processed {idx+1} lines...")
+                print(f"Annotator {annot_id}, processed {idx+1} test lines...")
 
-        merged_test["model_annotations"] = outputs
+        test_merged["model_annotations"] = outputs
 
-        out_path = os.path.join(args.output_folder, f"{args.model}_rag_result_{annot_id}.csv")
-        merged_test.to_csv(out_path, index=False)
-        print(f"Saved {len(merged_test)} RAG-based results to {out_path}")
+        out_csv = os.path.join(args.output_folder, f"{args.model}_rag_{args.rag_size}_{args.k_retrieval}_result_{annot_id}.csv")
+        test_merged.to_csv(out_csv, index=False)
+        print(f"Saved {len(test_merged)} RAG-based results to {out_csv}")
 
 if __name__ == "__main__":
     main()

@@ -3,7 +3,9 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import openai
+from dotenv import load_dotenv
 
+load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def run_gpt4o_inference(system_prompt: str, user_prompt: str) -> str:

@@ -76,9 +76,9 @@ def main():
             if (idx + 1) % 50 == 0:
                 print(f"Annotator {annot_id}, processed {idx+1} lines...")
 
-        merged_df[f"{args.model}_annotations"] = outputs
+        merged_df["model_annotations"] = outputs
 
-        output_csv = os.path.join(args.output_folder, f"result_{annot_id}.csv")
+        output_csv = os.path.join(args.output_folder, f"{args.model}_result_{annot_id}.csv")
         merged_df.to_csv(output_csv, index=False)
         print(f"Done! Saved {len(merged_df)} results to {output_csv}")
 

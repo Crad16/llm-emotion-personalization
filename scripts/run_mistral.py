@@ -15,7 +15,7 @@ def init_mistral():
         model_name = "mistralai/Mistral-7B-Instruct-v0.3"
         MISTRAL_TOKENIZER, MISTRAL_MODEL = load_hf_model(model_name)
 
-def run_mistral_inference(prompt: str) -> str:
+def run_mistral_inference(system_prompt: str, user_prompt: str) -> str:
     init_mistral()
     return hf_generate_response(prompt, MISTRAL_TOKENIZER, MISTRAL_MODEL)
 

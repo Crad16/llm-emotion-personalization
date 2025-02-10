@@ -13,7 +13,7 @@ def init_mentallama():
         model_name = "klyang/MentaLLaMA-chat-13B"
         MENTAL_LLAMA_TOKENIZER, MENTAL_LLAMA_MODEL = load_hf_model(model_name)
 
-def run_mentallama_inference(prompt: str) -> str:
+def run_mentallama_inference(system_prompt: str, user_prompt: str) -> str:
     init_mentallama()
     return hf_generate_response(prompt, MENTAL_LLAMA_TOKENIZER, MENTAL_LLAMA_MODEL)
 

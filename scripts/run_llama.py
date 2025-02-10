@@ -13,9 +13,9 @@ def init_llama():
         model_name = "meta-llama/Llama-3.1-8B-Instruct"
         LLAMA_TOKENIZER, LLAMA_MODEL = load_hf_model(model_name)
 
-def run_llama_inference(prompt: str) -> str:
+def run_llama_inference(system_prompt: str, user_prompt: str) -> str:
     init_llama()
-    return hf_generate_response(prompt, LLAMA_TOKENIZER, LLAMA_MODEL)
+    return hf_generate_response(system_prompt, user_prompt, LLAMA_TOKENIZER, LLAMA_MODEL)
 
 def main():
     test_output = run_llama_inference("Hello from LLaMA!")

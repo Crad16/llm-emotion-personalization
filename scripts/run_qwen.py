@@ -13,9 +13,9 @@ def init_qwen():
         model_name = "Qwen/Qwen2.5-7B-Instruct"
         QWEN_TOKENIZER, QWEN_MODEL = load_hf_model(model_name)
 
-def run_qwen_inference(prompt: str) -> str:
+def run_qwen_inference(system_prompt: str, user_prompt: str) -> str:
     init_qwen()
-    return hf_generate_response(prompt, QWEN_TOKENIZER, QWEN_MODEL)
+    return hf_generate_response(system_prompt, user_prompt, QWEN_TOKENIZER, QWEN_MODEL)
 
 def main():
     test_output = run_qwen_inference("Hello from Qwen2.5!")

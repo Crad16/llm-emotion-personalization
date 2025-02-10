@@ -2,24 +2,28 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.model_utils import load_hf_model, hf_generate_response
+import argparse
+import transformers
+import torch
 
-LLAMA_TOKENIZER = None
-LLAMA_MODEL = None
+LLAMA_PIPE = None
 
 def init_llama():
-    global LLAMA_TOKENIZER, LLAMA_MODEL
-    if LLAMA_MODEL is None or LLAMA_TOKENIZER is None:
-        model_name = "meta-llama/Llama-3.1-8B-Instruct"
-        LLAMA_TOKENIZER, LLAMA_MODEL = load_hf_model(model_name)
+    global LLAMA_PIPE
+    if LLAMA_PIPE is None:
+        model_id = "meta-llama/Llama-3.1-8B-Instruct"
+        LLAMA_PIPE = transformers.pipeline(
+            "text-generation",
+            model=model_id,
+            model_kwargs={"torch_dtype": torch.float16},
+            device_map="auto",
+        )
 
 def run_llama_inference(system_prompt: str, user_prompt: str) -> str:
     init_llama()
-    return hf_generate_response(system_prompt, user_prompt, LLAMA_TOKENIZER, LLAMA_MODEL)
-
-def main():
-    test_output = run_llama_inference("Hello from LLaMA!")
-    print(test_output)
-
-if __name__ == "__main__":
-    main()
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+    outputs = LLAMA_PIPE(messages, max_new_tokens=512)
+    return outputs[0]["generated_text"][-1]["content"]

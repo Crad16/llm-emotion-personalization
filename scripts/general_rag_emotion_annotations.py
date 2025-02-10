@@ -36,7 +36,7 @@ def main():
                         help="Folder to store final RAG-based results")
     parser.add_argument("--rag_size", type=int, default=50,
                         help="Number of lines to use as RAG reference (excluding header)")
-    parser.add_argument("--k_retrieval", type=int, default=3,
+    parser.add_argument("--k_retrieval", type=int, default=4,
                         help="Number of docs to retrieve for each new text")
     args = parser.parse_args()
 

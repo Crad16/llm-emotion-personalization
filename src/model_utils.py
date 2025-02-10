@@ -12,7 +12,7 @@ def load_hf_model(model_name: str):
 
 def hf_generate_response(system_prompt: str, user_prompt: str,
                         tokenizer, model, max_new_tokens=1000):
-    combined_prompt = f"""[System]\n{system_prompt}\n\n[User]\n{user_prompt}\n\n[Assistant]"""
+    combined_prompt = f"""[System]\n{system_prompt}\n\n[User]\n{user_prompt}"""
 
     inputs = tokenizer(combined_prompt, return_tensors="pt").to(model.device)
     output_ids = model.generate(

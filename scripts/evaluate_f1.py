@@ -19,18 +19,15 @@ def binarize(label_name: str, value: float) -> int:
     if label_name == "valence":
         return 1 if value < 0 else 0
     else:
-        # Non-valence
         return 0 if value == 0 else 1
 
 def parse_json_preds(json_str: str):
-    # Remove any wrapping triple backticks or '```json' prefix
-    # so that only the raw JSON remains
     s = json_str.strip()
     if s.startswith("```json"):
-        s = s[7:].strip()  # remove leading ```json
+        s = s[7:].strip() 
     if s.endswith("```"):
-        s = s[:-3].strip() # remove trailing ```
-    
+        s = s[:-3].strip()
+
     try:
         data = json.loads(s)
         return {lbl: float(data[lbl]) for lbl in LABELS}
@@ -40,10 +37,15 @@ def parse_json_preds(json_str: str):
 def evaluate_binary_f1():
     parser = argparse.ArgumentParser()
     parser.add_argument("--path", required=True, type=str,
-                        help="Evaluating CSV file")
+                        help="Evaluating CSV file (contains ground-truth columns and model_annotations).")
+    parser.add_argument("--skip_lines", type=int, default=0,
+                        help="Number of rows (excluding header) to skip from top before evaluating (e.g. 50, 100).")
     args = parser.parse_args()
-    
+
     df = pd.read_csv(args.path)
+    if args.skip_lines > 0:
+        df = df.iloc[args.skip_lines:].copy()
+        print(f"After skipping {args.skip_lines} lines, {len(df)} remain for evaluation.")
 
     gt_bins = {lbl: [] for lbl in LABELS}
     pred_bins = {lbl: [] for lbl in LABELS}
@@ -52,7 +54,7 @@ def evaluate_binary_f1():
         try:
             ground_truth_vals = {lbl: float(row[lbl]) for lbl in LABELS}
         except ValueError:
-            continue 
+            continue
 
         model_data = parse_json_preds(str(row["model_annotations"]))
         if model_data is None:
@@ -74,10 +76,7 @@ def evaluate_binary_f1():
             f1_scores[lbl] = f1_score(y_true, y_pred)
 
     valid_f1s = [s for s in f1_scores.values() if s is not None]
-    if valid_f1s:
-        avg_f1 = sum(valid_f1s) / len(valid_f1s)
-    else:
-        avg_f1 = None
+    avg_f1 = sum(valid_f1s) / len(valid_f1s) if valid_f1s else None
 
     print("=== Per-Label F1 Scores (Binary) ===")
     for lbl in LABELS:
@@ -86,6 +85,7 @@ def evaluate_binary_f1():
             print(f"{lbl}: None")
         else:
             print(f"{lbl}: {val:.4f}")
+
     print("\n=== Average F1 across all 10 labels ===")
     if avg_f1 is None:
         print("Average F1: None")

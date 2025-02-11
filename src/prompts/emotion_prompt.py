@@ -18,21 +18,21 @@ Post: {post_text}
 Assign exactly one intensity value per label:
 For joy, trust, anticipation, surprise, fear, sadness, disgust, anger, arousal, you should assign a value among 0, 1, 2, 3.
 For valence, you should assign a value among -3, -2, -1, 0, 1, 2, 3.
-For each label, provide your reasoning step by step.
+For each label, provide your reasoning step by step, as a single string.
 Output them in the [Format] below, a list containing assigned score and reasoning for each emotion, with no extra text.
 
 [Format]
 Return in JSON format, structured as follows:
 (
-"joy": 0 | 1 | 2 | 3, "joy_reason": [Your reasoning],
-"trust": 0 | 1 | 2 | 3, "trust_reason": [Your reasoning],
-"anticipation": 0 | 1 | 2 | 3, "anticipation_reason": [Your reasoning],
-"surprise": 0 | 1 | 2 | 3, "surprise_reason": [Your reasoning],
-"fear": 0 | 1 | 2 | 3, "fear_reason": [Your reasoning],
-"sadness": 0 | 1 | 2 | 3, "sadness_reason": [Your reasoning],
-"disgust": 0 | 1 | 2 | 3, "disgust_reason": [Your reasoning],
-"anger": 0 | 1 | 2 | 3, "anger_reason": [Your reasoning],
-"valence": -3 | -2 | -1 | 0 | 1 | 2 | 3, "valence_reason": [Your reasoning],
-"arousal": 0 | 1 | 2 | 3, "arousal_reason": [Your reasoning]
+"joy": 0 | 1 | 2 | 3, "joy_reason": Your reasoning,
+"trust": 0 | 1 | 2 | 3, "trust_reason": Your reasoning,
+"anticipation": 0 | 1 | 2 | 3, "anticipation_reason": Your reasoning,
+"surprise": 0 | 1 | 2 | 3, "surprise_reason": Your reasoning,
+"fear": 0 | 1 | 2 | 3, "fear_reason": Your reasoning,
+"sadness": 0 | 1 | 2 | 3, "sadness_reason": Your reasoning,
+"disgust": 0 | 1 | 2 | 3, "disgust_reason": Your reasoning,
+"anger": 0 | 1 | 2 | 3, "anger_reason": Your reasoning,
+"valence": -3 | -2 | -1 | 0 | 1 | 2 | 3, "valence_reason": Your reasoning,
+"arousal": 0 | 1 | 2 | 3, "arousal_reason": Your reasoning
 )
 """

@@ -23,20 +23,20 @@ from scripts.run_mentallama import run_mentallama_inference
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, type=str,
+    parser.add_argument("-m", "--model", required=True, type=str,
                         choices=["mistral","gpt4o","qwen2.5","llama","mental_llama"],
                         help="Which model to use for emotion annotation")
-    parser.add_argument("--annotator_ids", type=str, required=True,
+    parser.add_argument("-id", "--annotator_ids", type=str, required=True,
                         help="Comma-separated list of annotator IDs (e.g. '0,1,2')")
-    parser.add_argument("--split_folder", default="data/annotator_split",
+    parser.add_argument("-split", "--split_folder", default="data/annotator_split",
                         help="Folder that contains 'annotation_data_annotator_{id}.csv' files")
-    parser.add_argument("--text_csv", default="data/original/StudEmo_text_data.csv",
+    parser.add_argument("-text", "--text_csv", default="data/original/StudEmo_text_data.csv",
                         help="CSV file that has 'text_id' and 'text' columns")
-    parser.add_argument("--output_folder", default="data/personalization",
+    parser.add_argument("-o", "--output_folder", default="data/personalization",
                         help="Folder to store final RAG-based results")
-    parser.add_argument("--rag_size", type=int, default=50,
+    parser.add_argument("-size", "--rag_size", type=int, default=50,
                         help="Number of lines to use as RAG reference (excluding header)")
-    parser.add_argument("--k_retrieval", type=int, default=4,
+    parser.add_argument("-k", "--k_retrieval", type=int, default=4,
                         help="Number of docs to retrieve for each new text")
     args = parser.parse_args()
 

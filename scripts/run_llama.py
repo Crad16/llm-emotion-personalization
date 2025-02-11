@@ -25,5 +25,5 @@ def run_llama_inference(system_prompt: str, user_prompt: str) -> str:
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
-    outputs = LLAMA_PIPE(messages, max_new_tokens=512)
+    outputs = LLAMA_PIPE(messages, max_new_tokens=1000)
     return outputs[0]["generated_text"][-1]["content"]

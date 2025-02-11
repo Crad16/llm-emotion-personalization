@@ -15,17 +15,19 @@ from scripts.run_mentallama import run_mentallama_inference
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, type=str,
+    parser.add_argument("-m", "--model", required=True, type=str,
                         choices=["mistral","gpt4o","qwen2.5","llama","mental_llama"],
                         help="Which model to use for emotion annotation")
-    parser.add_argument("--annotator_ids", type=str, required=True,
+    parser.add_argument("-id", "--annotator_ids", type=str, required=True,
                         help="Comma-separated list of annotator IDs to process, e.g. '0,1,2'")
-    parser.add_argument("--test_folder", default="data/split_test",
+    parser.add_argument("-test", "--test_folder", default="data/split_test",
                         help="Folder that contains 'annotator_{id}_test.csv' files")
-    parser.add_argument("--output_folder", default="data/no_personalization",
+    parser.add_argument("-o", "--output_folder", default="data/no_personalization",
                         help="Folder to store the output CSV files")
-    parser.add_argument("--text_csv", default="data/original/StudEmo_text_data.csv",
+    parser.add_argument("-text", "--text_csv", default="data/original/StudEmo_text_data.csv",
                         help="CSV file mapping text_id to actual text columns")
+    parser.add_argument("-s", "--sample_lines", type=int, default=0,
+                        help="If > 0, only process the first N lines from the CSV (for quick testing).")
     args = parser.parse_args()
 
     if args.model == "mistral":
@@ -56,6 +58,9 @@ def main():
             continue
 
         df = pd.read_csv(input_csv)
+        if args.sample_lines > 0:
+            df = df.head(args.sample_lines)
+
         print(f"Loaded {len(df)} lines from {input_csv}")
 
         if "text_id" not in df.columns:

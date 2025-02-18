@@ -2,25 +2,27 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.model_utils import load_hf_model, hf_generate_response
+import transformers
+import torch
 
-QWEN_TOKENIZER = None
-QWEN_MODEL = None
+QWEN_PIPE = None
 
 def init_qwen():
-    global QWEN_TOKENIZER, QWEN_MODEL
-    if QWEN_MODEL is None or QWEN_TOKENIZER is None:
-        model_name = "Qwen/Qwen2.5-7B-Instruct"
-        QWEN_TOKENIZER, QWEN_MODEL = load_hf_model(model_name)
+    global QWEN_PIPE
+    if QWEN_PIPE is None:
+        model_id = "Qwen/Qwen2.5-7B-Instruct"
+        QWEN_PIPE = transformers.pipeline(
+            "text-generation",
+            model=model_id,
+            model_kwargs={"torch_dtype": torch.float16},
+            device_map="auto",
+        )
 
 def run_qwen_inference(system_prompt: str, user_prompt: str) -> str:
     init_qwen()
-    return hf_generate_response(system_prompt, user_prompt, QWEN_TOKENIZER, QWEN_MODEL)
-
-def main():
-    test_output = run_qwen_inference("Hello from Qwen2.5!")
-    print(test_output)
-
-if __name__ == "__main__":
-    main()
-    
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+    outputs = QWEN_PIPE(messages, max_new_tokens=1000, return_full_text=False)
+    return outputs[0]["generated_text"]

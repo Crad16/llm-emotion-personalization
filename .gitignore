@@ -157,3 +157,4 @@ cython_debug/
 data/no_personalization
 data/personalization
 unused_scripts/
+scores/

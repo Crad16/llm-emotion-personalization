@@ -1,27 +1,28 @@
-# scripts/run_mistral.py
-
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.model_utils import load_hf_model, hf_generate_response
+import transformers
+import torch
 
-MISTRAL_TOKENIZER = None
-MISTRAL_MODEL = None
+MISTRAL_PIPE = None
 
 def init_mistral():
-    global MISTRAL_TOKENIZER, MISTRAL_MODEL
-    if MISTRAL_MODEL is None or MISTRAL_TOKENIZER is None:
-        model_name = "mistralai/Mistral-7B-Instruct-v0.3"
-        MISTRAL_TOKENIZER, MISTRAL_MODEL = load_hf_model(model_name)
+    global MISTRAL_PIPE
+    if MISTRAL_PIPE is None:
+        model_id = "mistralai/Mistral-7B-Instruct-v0.3"
+        MISTRAL_PIPE = transformers.pipeline(
+            "text-generation",
+            model=model_id,
+            model_kwargs={"torch_dtype": torch.float16},
+            device_map="auto"
+        )
 
 def run_mistral_inference(system_prompt: str, user_prompt: str) -> str:
     init_mistral()
-    return hf_generate_response(prompt, MISTRAL_TOKENIZER, MISTRAL_MODEL)
-
-def main():
-    test_output = run_mistral_inference("Hello from Mistral!")
-    print(test_output)
-
-if __name__ == "__main__":
-    main()
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+    outputs = MISTRAL_PIPE(messages, max_new_tokens=1000, return_full_text=False)
+    return outputs[0]["generated_text"]

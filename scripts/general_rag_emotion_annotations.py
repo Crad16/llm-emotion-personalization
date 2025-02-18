@@ -19,12 +19,11 @@ from scripts.run_mistral import run_mistral_inference
 from scripts.run_gpt4o import run_gpt4o_inference
 from scripts.run_qwen import run_qwen_inference
 from scripts.run_llama import run_llama_inference
-from scripts.run_mentallama import run_mentallama_inference
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model", required=True, type=str,
-                        choices=["mistral","gpt4o","qwen2.5","llama","mental_llama"],
+                        choices=["mistral","gpt4o","qwen2.5","llama"],
                         help="Which model to use for emotion annotation")
     parser.add_argument("-id", "--annotator_ids", type=str, required=True,
                         help="Comma-separated list of annotator IDs (e.g. '0,1,2')")
@@ -48,8 +47,6 @@ def main():
         inference_func = run_qwen_inference
     elif args.model == "llama":
         inference_func = run_llama_inference
-    elif args.model == "mental_llama":
-        inference_func = run_mentallama_inference
     else:
         raise ValueError(f"Unknown model: {args.model}")
 

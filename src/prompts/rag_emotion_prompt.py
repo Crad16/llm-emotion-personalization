@@ -30,15 +30,17 @@ Output them in the [Format] below, a list containing assigned score and reasonin
 [Format]
 Return in JSON format, structured as follows:
 (
-"joy": 0 | 1 | 2 | 3, "joy_reason": Your reasoning,
-"trust": 0 | 1 | 2 | 3, "trust_reason": Your reasoning,
-"anticipation": 0 | 1 | 2 | 3, "anticipation_reason": Your reasoning,
-"surprise": 0 | 1 | 2 | 3, "surprise_reason": Your reasoning,
-"fear": 0 | 1 | 2 | 3, "fear_reason": Your reasoning,
-"sadness": 0 | 1 | 2 | 3, "sadness_reason": Your reasoning,
-"disgust": 0 | 1 | 2 | 3, "disgust_reason": Your reasoning,
-"anger": 0 | 1 | 2 | 3, "anger_reason": Your reasoning,
-"valence": -3 | -2 | -1 | 0 | 1 | 2 | 3, "valence_reason": Your reasoning,
-"arousal": 0 | 1 | 2 | 3, "arousal_reason": Your reasoning
+"joy": 0 | 1 | 2 | 3, "joy_reason": (Your reasoning),
+"trust": 0 | 1 | 2 | 3, "trust_reason": (Your reasoning),
+"anticipation": 0 | 1 | 2 | 3, "anticipation_reason": (Your reasoning),
+"surprise": 0 | 1 | 2 | 3, "surprise_reason": (Your reasoning),
+"fear": 0 | 1 | 2 | 3, "fear_reason": (Your reasoning),
+"sadness": 0 | 1 | 2 | 3, "sadness_reason": (Your reasoning),
+"disgust": 0 | 1 | 2 | 3, "disgust_reason": (Your reasoning),
+"anger": 0 | 1 | 2 | 3, "anger_reason": (Your reasoning),
+"valence": -3 | -2 | -1 | 0 | 1 | 2 | 3, "valence_reason": (Your reasoning),
+"arousal": 0 | 1 | 2 | 3, "arousal_reason": (Your reasoning)
 )
+
+Provide only the above JSON, with no extra text.
 """

@@ -17,11 +17,4 @@ def run_gpt4o_inference(system_prompt: str, user_prompt: str) -> str:
         ],
         temperature=0.0,
     )
-    return response.choices[0].message.content
-
-def main():
-    test_output = run_gpt4o_inference("Hello from GPT-4o!")
-    print(test_output)
-
-if __name__ == "__main__":
-    main()
+    return response.choices[0].message.content 

@@ -37,8 +37,6 @@ def main():
         inference_func = run_qwen_inference
     elif args.model == "llama":
         inference_func = run_llama_inference
-    elif args.model == "mental_llama":
-        inference_func = run_mentallama_inference
     else:
         raise ValueError(f"Unknown model: {args.model}")
 
